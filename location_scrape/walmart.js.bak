@@ -1,0 +1,72 @@
+const puppeteer = require('puppeteer');
+const pg = require('pg');
+
+const vgmUrl = 'https://malls.fandom.com/wiki/List_of_Costco_Wholesale_Locations';
+
+const { Client } = require('pg');
+const client = new Client({
+    user: 'doadmin',
+    host: 'ebs-postgres-pricing-do-user-6796085-0.db.ondigitalocean.com',
+    database: 'tms',
+    password: 'bpmzrr9x5u7r1762',
+    port: 25060,
+    ssl: {
+        rejectUnauthorized: false,
+      }
+});
+
+(async () => {
+    try {
+        const browser = await puppeteer.launch();
+        const page = await browser.newPage();
+
+        await client.connect();
+        await page.goto(vgmUrl);
+
+        writeToDB = async (currState, line) => {
+            let [city, address, name] = line.split(' - ');
+
+            // walmart
+            // name = name && name.split('(opened')[0].trim(); 
+
+            // best buy
+            // if (name.split(' ')[0] != 'Best') {
+            //     name = `Best Buy @ ${name}`;
+            // }
+
+            // costco
+            name = name || 'Costco Wholesale';
+            console.log(name);
+
+            let query = `Insert into tms.customers (state, city, address, name)
+                             values ($1, $2, $3, $4)`;
+            await client.query(query, [currState && currState.trim(), city && city.trim(), address && address.trim(), name && name.trim()])
+        }
+
+        const lines = await page.$$eval('.mw-headline, .mw-parser-output li', elements => elements.filter(element => {
+            console.log(JSON.stringify(element))
+            return true;
+        }).map(line => line.textContent));
+
+
+        let currState = '';
+
+        lines.forEach(line => {
+            let linetype = (line.includes(' - ')) ? 'location' : 'state';
+
+            if (linetype == 'state' & line != currState) {
+                currState = line;
+            }
+
+            if (linetype == 'location') {
+                console.log(`${currState},  ${line}`);
+                writeToDB(currState, line);
+            }
+
+        })
+
+        await browser.close()
+    } catch (err) {
+        console.warn(err)
+    }
+})();

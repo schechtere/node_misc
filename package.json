@@ -1,0 +1,22 @@
+{
+  "name": "node_misc",
+  "version": "1.0.0",
+  "description": "NPM project for random utility programs",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Ed Schechter",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "form-data": "^4.0.0",
+    "fs": "0.0.1-security",
+    "got": "^11.8.2",
+    "path": "^0.12.7",
+    "pg": "^8.5.1",
+    "puppeteer": "^8.0.0",
+    "qs": "^6.10.1"
+  }
+}
